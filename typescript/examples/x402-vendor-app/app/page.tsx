@@ -5,6 +5,10 @@ import { useAccount } from "wagmi"
 import { CreateItemForm } from "@/components/CreateItemForm"
 import { ItemList } from "@/components/ItemList"
 import { TemplateItems } from "@/components/TemplateItems"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Coffee } from "lucide-react"
 import type { VendorItem } from "@/types/item"
 
 export default function Home() {
@@ -84,62 +88,77 @@ export default function Home() {
   }
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>🛒 x402 Vendor App</h1>
-        <div className="header-actions">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-stone-950 via-stone-900 to-stone-950">
+      <header className="coffee-header px-6 py-6 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <Coffee className="w-8 h-8 text-amber-400" />
+          <h1 className="text-3xl font-bold tracking-tight text-amber-100">Artisan Coffee & Tea</h1>
+        </div>
+        <div className="flex items-center gap-3">
           {!isMounted ? (
-            // Show placeholder during SSR to prevent hydration mismatch
-            <div className="wallet-info" style={{ opacity: 0 }}>
-              <span className="wallet-address">Loading...</span>
+            <div className="opacity-0">
+              <Badge variant="outline" className="bg-amber-800/20 text-amber-100 border-amber-700">
+                Loading...
+              </Badge>
             </div>
           ) : isConnected ? (
-            <div className="wallet-info">
-              <span className="wallet-address">
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="bg-amber-900/30 text-amber-200 border-amber-800/50 px-3 py-1.5">
                 {address?.slice(0, 6)}...{address?.slice(-4)}
-              </span>
-              <button onClick={handleOpenWallet} className="wallet-button">
+              </Badge>
+              <Button 
+                onClick={handleOpenWallet} 
+                variant="outline"
+                className="bg-amber-900/20 hover:bg-amber-900/30 text-amber-100 border-amber-800/50 hover:border-amber-700/50"
+              >
                 Wallet
-              </button>
+              </Button>
             </div>
           ) : (
-            <button onClick={handleOpenWallet} className="connect-button">
+            <Button 
+              onClick={handleOpenWallet}
+              className="coffee-button-primary"
+            >
               Connect Wallet
-            </button>
+            </Button>
           )}
         </div>
       </header>
 
-      <nav className="app-nav">
-        <button
-          className={activeTab === "list" ? "active" : ""}
-          onClick={() => setActiveTab("list")}
-        >
-          Browse Items
-        </button>
-        <button
-          className={activeTab === "create" ? "active" : ""}
-          onClick={() => setActiveTab("create")}
-        >
-          Create Item
-        </button>
-      </nav>
+      <div className="bg-stone-900/50 border-b border-amber-900/30 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "list" | "create")} className="w-full">
+            <TabsList className="bg-transparent h-14 gap-1">
+              <TabsTrigger 
+                value="list" 
+                className="data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-200 data-[state=active]:border-b-2 data-[state=active]:border-amber-600 px-6 text-base font-semibold text-stone-400 hover:text-stone-200"
+              >
+                Browse Menu
+              </TabsTrigger>
+              <TabsTrigger 
+                value="create"
+                className="data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-200 data-[state=active]:border-b-2 data-[state=active]:border-amber-600 px-6 text-base font-semibold text-stone-400 hover:text-stone-200"
+              >
+                ✨ Add New Item
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      </div>
 
-      <main className="app-main">
+      <main className="flex-1 px-6 py-8 max-w-7xl w-full mx-auto">
         {activeTab === "list" ? (
           <ItemList />
         ) : (
-          <div>
+          <div className="space-y-8">
             <TemplateItems 
               onItemAdded={handleItemCreated} 
               defaultPayToAddress={defaultPayToAddress || undefined}
             />
-            <div style={{ marginTop: "3rem" }}>
-              <CreateItemForm 
-                onItemCreated={handleItemCreated} 
-                defaultPayToAddress={defaultPayToAddress || undefined}
-              />
-            </div>
+            <CreateItemForm 
+              onItemCreated={handleItemCreated} 
+              defaultPayToAddress={defaultPayToAddress || undefined}
+            />
           </div>
         )}
       </main>

@@ -1,9 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useAccount, useWalletClient, useWaitForTransactionReceipt, useChainId, useSwitchChain } from "wagmi"
 import { base, baseSepolia, mainnet } from "wagmi/chains"
 import { exact } from "x402/schemes"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Copy, CheckCircle2, Loader2, Clock } from "lucide-react"
 import type { VendorItem } from "@/types/item"
 import { formatPrice } from "@/utils/formatting"
 import { createPaymentIntent, submitPayment } from "@/utils/payment"
@@ -50,6 +54,7 @@ export function PurchaseModal({
   const [paymentIntent, setPaymentIntent] = useState<PaymentIntent | null>(null)
   const [payment, setPayment] = useState<Payment | null>(null)
   const [settlementTxHash, setSettlementTxHash] = useState<string | null>(null)
+  const hasCalledOnComplete = useRef(false)
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash: settlementTxHash as `0x${string}` | undefined,
@@ -62,12 +67,20 @@ export function PurchaseModal({
 
   // Handle transaction confirmation - don't auto-close, let user close manually
   useEffect(() => {
-    if (isConfirmed && settlementTxHash) {
+    if (isConfirmed && settlementTxHash && !hasCalledOnComplete.current) {
       // Call onComplete to update parent state, but don't close modal
       // The modal will stay open until user manually closes it
+      hasCalledOnComplete.current = true
       onComplete()
     }
   }, [isConfirmed, settlementTxHash, onComplete])
+
+  // Reset the ref when the modal is closed/reopened
+  useEffect(() => {
+    if (!settlementTxHash) {
+      hasCalledOnComplete.current = false
+    }
+  }, [settlementTxHash])
 
   const handlePurchase = async () => {
     if (!isConnected || !walletClient || !address) {
@@ -154,79 +167,48 @@ export function PurchaseModal({
     }
   }
 
-  // Prevent closing on overlay click when transaction is confirmed
-  const handleOverlayClick = () => {
-    // Only allow closing if transaction is not confirmed
-    // This prevents accidental closing after successful purchase
-    if (!isConfirmed) {
-      onClose()
-    }
-  }
-
   return (
-    <div className="modal-overlay" onClick={handleOverlayClick}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Purchase {item.name}</h2>
-          <button className="close-button" onClick={onClose}>
-            ×
-          </button>
-        </div>
-        <div className="modal-body">
-          <p>{item.description}</p>
-          <div className="purchase-details">
-            <div className="detail-row">
-              <span>Price:</span>
-              <strong>{formatPrice(item.price, item.paymentRequirements)}</strong>
+    <Dialog open={true} onOpenChange={(open) => !open && !isConfirmed && onClose()}>
+      <DialogContent className="max-w-lg max-h-[90vh] coffee-modal-card border-amber-300">
+        <DialogHeader>
+          <DialogTitle className="text-2xl text-amber-100">Order {item.name}</DialogTitle>
+          <DialogDescription className="text-stone-400">{item.description}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 overflow-y-auto max-h-[calc(90vh-200px)] pr-2">
+          <div className="space-y-3 p-4 bg-stone-800/50 rounded-lg border border-amber-900/30">
+            <div className="flex justify-between items-center">
+              <span className="text-stone-300 font-medium">Price:</span>
+              <strong className="text-2xl text-amber-400">{formatPrice(item.price, item.paymentRequirements)}</strong>
             </div>
-            <div className="detail-row">
-              <span>Network:</span>
-              <span>{item.paymentRequirements.network}</span>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-stone-400">Network:</span>
+              <Badge variant="outline" className="coffee-badge">{item.paymentRequirements.network}</Badge>
             </div>
-            <div className="detail-row">
-              <span>Asset:</span>
-              <span>{item.paymentRequirements.asset}</span>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-stone-400">Asset:</span>
+              <span className="text-amber-200 font-mono text-xs">{item.paymentRequirements.asset.slice(0, 20)}...</span>
             </div>
-            <div className="detail-row">
-              <span>Pay To:</span>
-              <span>{item.paymentRequirements.payTo}</span>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-stone-400">Pay To:</span>
+              <span className="text-amber-200 font-mono text-xs">{item.paymentRequirements.payTo.slice(0, 20)}...</span>
             </div>
           </div>
-          {error && <div className="error-message">{error}</div>}
-        </div>
-        <div className="modal-footer">
-          <button 
-            onClick={onClose} 
-            disabled={isProcessing || isConfirming}
-          >
-            {isConfirmed ? "Close" : "Cancel"}
-          </button>
-          {!isConfirmed && (
-            <button
-              onClick={handlePurchase}
-              disabled={isProcessing || isConfirming || !isConnected}
-              className="purchase-button"
-            >
-              {isProcessing || isConfirming
-                ? "Processing..."
-                : "Confirm Purchase"}
-            </button>
+          {error && (
+            <div className="p-4 bg-red-900/30 border border-red-800/50 rounded-lg text-red-300">
+              {error}
+            </div>
           )}
-        </div>
-        {paymentIntent && (
-          <div className="transaction-status">
-            <div className="transaction-header">
-              <div className="transaction-status-indicator">
+          {paymentIntent && (
+            <div className="p-4 bg-stone-800/50 rounded-lg border border-amber-900/30 space-y-4">
+              <div className="flex items-center gap-3">
                 {isConfirmed ? (
-                  <div className="status-icon success">✓</div>
+                  <CheckCircle2 className="w-6 h-6 text-green-400" />
                 ) : payment ? (
-                  <div className="status-icon pending">
-                    <div className="spinner"></div>
-                  </div>
+                  <Loader2 className="w-6 h-6 text-amber-500 animate-spin" />
                 ) : (
-                  <div className="status-icon pending">⏳</div>
+                  <Clock className="w-6 h-6 text-amber-500" />
                 )}
-                <span className="status-text">
+                <span className="font-semibold text-amber-100">
                   {isConfirmed
                     ? "Payment Settled"
                     : payment
@@ -234,64 +216,91 @@ export function PurchaseModal({
                       : "Payment Intent Created"}
                 </span>
               </div>
+              <div className="space-y-2 text-sm">
+                {paymentIntent && (
+                  <div>
+                    <span className="text-stone-400">Payment Intent ID: </span>
+                    <code className="text-amber-200 font-mono text-xs">{paymentIntent.id}</code>
+                  </div>
+                )}
+                {payment && (
+                  <div>
+                    <span className="text-stone-400">Payment ID: </span>
+                    <code className="text-amber-200 font-mono text-xs">{payment.id}</code>
+                  </div>
+                )}
+                {settlementTxHash && (
+                  <div className="space-y-1">
+                    <span className="text-stone-400 block">Settlement Transaction Hash:</span>
+                    <div className="flex items-center gap-2 p-2 bg-stone-900 rounded border border-amber-900/30">
+                      <code className="text-amber-200 font-mono text-xs flex-1 break-all">{settlementTxHash}</code>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(settlementTxHash)
+                          alert("Transaction hash copied to clipboard!")
+                        }}
+                        className="h-8 w-8 p-0 hover:bg-stone-700"
+                      >
+                        <Copy className="w-4 h-4 text-stone-300" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {payment && !settlementTxHash && (
+                  <div className="space-y-2">
+                    <p className="text-stone-400">Waiting for facilitator to settle payment...</p>
+                    <div className="w-full h-2 bg-stone-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-600 animate-pulse" style={{ width: "60%" }}></div>
+                    </div>
+                  </div>
+                )}
+                {isConfirming && settlementTxHash && (
+                  <div className="space-y-2">
+                    <p className="text-stone-400">Confirming settlement transaction...</p>
+                    <div className="w-full h-2 bg-stone-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-600 animate-pulse" style={{ width: "80%" }}></div>
+                    </div>
+                  </div>
+                )}
+                {isConfirmed && (
+                  <div className="p-3 bg-green-900/30 border border-green-700/50 rounded-lg">
+                    <p className="text-green-300 font-medium">✅ Payment successful! Your order is complete.</p>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="transaction-details">
-              {paymentIntent && (
-                <div className="payment-info">
-                  <p className="info-label">Payment Intent ID:</p>
-                  <code className="info-value">{paymentIntent.id}</code>
-                </div>
+          )}
+        </div>
+        <DialogFooter className="pt-4 border-t border-amber-900/30">
+          <Button 
+            variant="outline"
+            onClick={onClose} 
+            disabled={isProcessing || isConfirming}
+            className="coffee-button-secondary"
+          >
+            {isConfirmed ? "Close" : "Cancel"}
+          </Button>
+          {!isConfirmed && (
+            <Button
+              onClick={handlePurchase}
+              disabled={isProcessing || isConfirming || !isConnected}
+              className="coffee-button-primary"
+            >
+              {isProcessing || isConfirming ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Confirm Order"
               )}
-              {payment && (
-                <div className="payment-info">
-                  <p className="info-label">Payment ID:</p>
-                  <code className="info-value">{payment.id}</code>
-                </div>
-              )}
-              {settlementTxHash && (
-                <div className="transaction-hash">
-                  <span className="hash-label">Settlement Transaction Hash:</span>
-                  <div className="hash-value">
-                    <code>{settlementTxHash}</code>
-                    <button
-                      className="copy-button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(settlementTxHash)
-                        alert("Transaction hash copied to clipboard!")
-                      }}
-                      title="Copy to clipboard"
-                    >
-                      📋
-                    </button>
-                  </div>
-                </div>
-              )}
-              {payment && !settlementTxHash && (
-                <div className="transaction-progress">
-                  <p>Waiting for facilitator to settle payment...</p>
-                  <div className="progress-bar">
-                    <div className="progress-fill"></div>
-                  </div>
-                </div>
-              )}
-              {isConfirming && settlementTxHash && (
-                <div className="transaction-progress">
-                  <p>Confirming settlement transaction...</p>
-                  <div className="progress-bar">
-                    <div className="progress-fill"></div>
-                  </div>
-                </div>
-              )}
-              {isConfirmed && (
-                <div className="transaction-success">
-                  <p>✅ Payment successful! Your purchase is complete.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

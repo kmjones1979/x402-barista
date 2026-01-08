@@ -123,4 +123,3 @@ export async function getPaymentStatus(paymentId: string): Promise<{
     status: "settled",
   }
 }
-
