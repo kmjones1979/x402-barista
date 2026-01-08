@@ -5,16 +5,17 @@ import { useAccount } from "wagmi"
 import { CreateItemForm } from "@/components/CreateItemForm"
 import { ItemList } from "@/components/ItemList"
 import { TemplateItems } from "@/components/TemplateItems"
+import { VirtualBarista } from "@/components/VirtualBarista"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Coffee } from "lucide-react"
+import { Coffee, Bot } from "lucide-react"
 import type { VendorItem } from "@/types/item"
 
 export default function Home() {
   const { address, isConnected } = useAccount()
   const [items, setItems] = useState<VendorItem[]>([])
-  const [activeTab, setActiveTab] = useState<"list" | "create">("list")
+  const [activeTab, setActiveTab] = useState<"list" | "create" | "barista">("list")
   const [web3ModalHook, setWeb3ModalHook] = useState<(() => { open: () => void }) | null>(null)
   const [isMounted, setIsMounted] = useState(false)
   const [defaultPayToAddress, setDefaultPayToAddress] = useState<string>("")
@@ -127,13 +128,20 @@ export default function Home() {
 
       <div className="bg-stone-900/50 border-b border-amber-900/30 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "list" | "create")} className="w-full">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "list" | "create" | "barista")} className="w-full">
             <TabsList className="bg-transparent h-14 gap-1">
               <TabsTrigger 
                 value="list" 
                 className="data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-200 data-[state=active]:border-b-2 data-[state=active]:border-amber-600 px-6 text-base font-semibold text-stone-400 hover:text-stone-200"
               >
                 Browse Menu
+              </TabsTrigger>
+              <TabsTrigger 
+                value="barista"
+                className="data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-200 data-[state=active]:border-b-2 data-[state=active]:border-amber-600 px-6 text-base font-semibold text-stone-400 hover:text-stone-200 flex items-center gap-2"
+              >
+                <Bot className="w-4 h-4" />
+                Virtual Barista
               </TabsTrigger>
               <TabsTrigger 
                 value="create"
@@ -147,9 +155,9 @@ export default function Home() {
       </div>
 
       <main className="flex-1 px-6 py-8 max-w-7xl w-full mx-auto">
-        {activeTab === "list" ? (
-          <ItemList />
-        ) : (
+        {activeTab === "list" && <ItemList />}
+        {activeTab === "barista" && <VirtualBarista />}
+        {activeTab === "create" && (
           <div className="space-y-8">
             <TemplateItems 
               onItemAdded={handleItemCreated} 

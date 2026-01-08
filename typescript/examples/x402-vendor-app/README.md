@@ -11,13 +11,17 @@ A production-ready example application for selling items over x402. This app dem
 - 🔐 EIP-712 compliant signing for USDC on Base mainnet
 - 📱 Responsive, modern UI with transaction status tracking
 - ✅ Payment verification and settlement tracking
+- ☕ AI Barista chat with x402 micropayments (optional)
+- 🤖 Automated agent purchases with smart account support (optional)
+- 🔌 MCP server integration for x402-enabled tools (optional)
 
 ## Prerequisites
 
 - Node.js 18+
 - npm, pnpm, or yarn
 - A WalletConnect Project ID (get one at [cloud.walletconnect.com](https://cloud.walletconnect.com))
-- CDP API Keys for Base mainnet (get from [portal.cdp.coinbase.com](https://portal.cdp.coinbase.com))
+- CDP API Keys for Base mainnet (get from [portal.cdp.coinbase.com](https://portal.cdp.coinbase.com)) - Required for CDP facilitator
+- (Optional) Google Gemini API key for AI Barista feature (get from [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey))
 
 ## SDK
 
@@ -41,37 +45,36 @@ pnpm install
 
 2. **Configure environment variables:**
 
-Create a `.env` file in the `x402-vendor-app` directory:
+Copy the example environment file and fill in your values:
 
 ```bash
-# WalletConnect Configuration (required)
-NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_wallet_connect_project_id
-
-# x402 Facilitator Configuration
-# For CDP facilitator (Base mainnet): https://api.cdp.coinbase.com/platform/v2/x402
-# For testnet facilitator: https://x402.org/facilitator
-NEXT_PUBLIC_FACILITATOR_URL=https://api.cdp.coinbase.com/platform/v2/x402
-
-# CDP API Keys (required for CDP facilitator on Base mainnet)
-# Get your API keys from https://portal.cdp.coinbase.com
-CDP_API_KEY_ID=your_cdp_api_key_id
-CDP_API_KEY_SECRET=your_cdp_api_key_secret
-
-# Default payment address (optional)
-# Used as default for all items if not specified
-AGENT_PAY_TO_ADDRESS=0x0000000000000000000000000000000000000000
+cp .env.example .env
 ```
 
-**Required:**
-- `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` - Get from [cloud.walletconnect.com](https://cloud.walletconnect.com)
+Then edit `.env` with your actual values. See the [Environment Variables](#environment-variables) section below for detailed explanations of each variable.
+
+**Quick Start (Minimum Required):**
+
+For basic functionality, you only need:
+
+```bash
+NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_wallet_connect_project_id
+```
 
 **For CDP Facilitator (Base mainnet):**
-- `CDP_API_KEY_ID` - Get from [portal.cdp.coinbase.com](https://portal.cdp.coinbase.com)
-- `CDP_API_KEY_SECRET` - Get from [portal.cdp.coinbase.com](https://portal.cdp.coinbase.com)
-- `NEXT_PUBLIC_FACILITATOR_URL=https://api.cdp.coinbase.com/platform/v2/x402`
+
+```bash
+NEXT_PUBLIC_FACILITATOR_URL=https://api.cdp.coinbase.com/platform/v2/x402
+CDP_API_KEY_ID=your_cdp_api_key_id
+CDP_API_KEY_SECRET=your_cdp_api_key_secret
+```
 
 **For Testnet Facilitator (Base Sepolia):**
-- `NEXT_PUBLIC_FACILITATOR_URL=https://x402.org/facilitator` (no API keys needed)
+
+```bash
+NEXT_PUBLIC_FACILITATOR_URL=https://x402.org/facilitator
+# No API keys needed for testnet
+```
 
 **Note**: The `.env` file should be in the `x402-vendor-app` directory (where `next.config.js` is located), not in the repository root.
 
@@ -84,6 +87,140 @@ pnpm dev
 ```
 
 The app will run on `http://localhost:3010` (configured in `package.json`).
+
+## Environment Variables
+
+The app uses environment variables for configuration. A complete `.env.example` file is provided with all available options. Below is a detailed explanation of each variable:
+
+### Required Variables
+
+#### `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID`
+- **Description**: WalletConnect Project ID for wallet connection
+- **Required**: Yes
+- **Where to get**: [cloud.walletconnect.com](https://cloud.walletconnect.com)
+- **Usage**: Used by `@web3modal/wagmi` to enable wallet connections
+- **Note**: Must have `NEXT_PUBLIC_` prefix for client-side access in Next.js
+
+### x402 Facilitator Configuration
+
+#### `NEXT_PUBLIC_FACILITATOR_URL`
+- **Description**: URL of the x402 facilitator service
+- **Required**: No (defaults to `https://x402.org/facilitator`)
+- **Options**:
+  - CDP Facilitator (Base mainnet): `https://api.cdp.coinbase.com/platform/v2/x402`
+  - Testnet Facilitator: `https://x402.org/facilitator`
+- **Usage**: Used for payment verification and settlement
+- **Note**: Can also use `FACILITATOR_URL` (server-side only, no `NEXT_PUBLIC_` prefix)
+
+#### `CDP_API_KEY_ID`
+- **Description**: CDP API Key ID for authentication
+- **Required**: Yes (if using CDP facilitator)
+- **Where to get**: [portal.cdp.coinbase.com](https://portal.cdp.coinbase.com)
+- **Usage**: Used with `CDP_API_KEY_SECRET` for Basic Auth with CDP facilitator
+- **Note**: Only needed when using CDP facilitator on Base mainnet
+
+#### `CDP_API_KEY_SECRET`
+- **Description**: CDP API Key Secret for authentication
+- **Required**: Yes (if using CDP facilitator)
+- **Where to get**: [portal.cdp.coinbase.com](https://portal.cdp.coinbase.com)
+- **Usage**: Used with `CDP_API_KEY_ID` for Basic Auth with CDP facilitator
+- **Note**: Only needed when using CDP facilitator on Base mainnet
+
+### Payment Address Configuration
+
+#### `AGENT_PAY_TO_ADDRESS`
+- **Description**: Default payment address for all items
+- **Required**: No
+- **Format**: Ethereum address (e.g., `0x...`)
+- **Usage**: Used as the default `payTo` address when creating items if not specified
+- **Note**: Server-side only (no `NEXT_PUBLIC_` prefix needed)
+
+#### `NEXT_PUBLIC_AGENT_PAY_TO_ADDRESS`
+- **Description**: Default payment address (client-side accessible)
+- **Required**: No
+- **Format**: Ethereum address (e.g., `0x...`)
+- **Usage**: Same as `AGENT_PAY_TO_ADDRESS` but accessible on client-side
+- **Note**: Use this if you need the address available in browser components
+
+### Agent Wallet Configuration (Optional - for Barista/MCP features)
+
+These variables are used for automated agent purchases via the `/api/barista/purchase` endpoint.
+
+#### `AGENT_PRIVATE_KEY`
+- **Description**: Private key for the agent wallet (must start with `0x`)
+- **Required**: No (only for automated agent purchases)
+- **Format**: Hex string starting with `0x` (64 characters after `0x`)
+- **Usage**: Used to sign payments for automated purchases
+- **Security**: ⚠️ **Never commit this to version control!** Keep it in `.env` only
+- **Example**: `0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef`
+
+#### `USE_SMART_ACCOUNT`
+- **Description**: Enable Ampersend Smart Account mode instead of EOA
+- **Required**: No
+- **Values**: `"true"` or `"false"` (default: `false`)
+- **Usage**: When `true`, uses Ampersend Smart Account with spend limits and monitoring
+- **Note**: Requires `SMART_ACCOUNT_ADDRESS` to be set
+
+#### `SMART_ACCOUNT_ADDRESS`
+- **Description**: Smart account address for Ampersend integration
+- **Required**: No (only if `USE_SMART_ACCOUNT=true`)
+- **Format**: Ethereum address (e.g., `0x...`)
+- **Default**: `0x6327F25caD99f9fad78A6bb0C97d106159AE6180`
+- **Usage**: The smart account address that will authorize payments
+- **Note**: Get this from [app.ampersend.ai](https://app.ampersend.ai) or [app.staging.ampersend.ai](https://app.staging.ampersend.ai)
+
+### MCP Server Configuration (Optional - for Barista/MCP features)
+
+#### `MCP_SERVER_URL`
+- **Description**: URL of the MCP server for x402-enabled MCP tools
+- **Required**: No (only for MCP/Barista features)
+- **Format**: HTTP URL (e.g., `http://localhost:8080/mcp`)
+- **Usage**: Used by `/api/barista` route to connect to MCP server
+- **Example**: `http://localhost:8080/mcp`
+
+### Google Gemini API (Optional - for AI Barista feature)
+
+#### `GEMINI_API_KEY`
+- **Description**: Google Gemini API key for AI-powered barista responses
+- **Required**: No (only for AI Barista feature)
+- **Where to get**: [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+- **Usage**: Used by `/api/barista` route for AI-generated responses
+- **Note**: If not set, the barista will use fallback rule-based responses
+
+### MCP Server Port (Optional - for mcp-server.ts)
+
+#### `PORT`
+- **Description**: Port for the standalone MCP server (`mcp-server.ts`)
+- **Required**: No
+- **Default**: `8080`
+- **Usage**: Used when running the standalone MCP server
+- **Note**: Only affects the standalone MCP server, not the Next.js app
+
+### Environment Variable Best Practices
+
+1. **Never commit `.env` files**: Add `.env` to `.gitignore`
+2. **Use `.env.example`**: Commit `.env.example` with placeholder values
+3. **Client vs Server**: 
+   - Variables with `NEXT_PUBLIC_` prefix are exposed to the browser
+   - Variables without prefix are server-side only (more secure)
+4. **Restart after changes**: Next.js requires a restart to pick up new environment variables
+5. **Production**: Use your hosting platform's environment variable configuration (Vercel, Railway, etc.)
+
+### Quick Reference
+
+| Variable | Required | Client-Side | Purpose |
+|----------|----------|-------------|---------|
+| `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` | ✅ Yes | ✅ Yes | Wallet connection |
+| `NEXT_PUBLIC_FACILITATOR_URL` | No | ✅ Yes | Facilitator endpoint |
+| `CDP_API_KEY_ID` | If CDP | ❌ No | CDP authentication |
+| `CDP_API_KEY_SECRET` | If CDP | ❌ No | CDP authentication |
+| `AGENT_PAY_TO_ADDRESS` | No | ❌ No | Default payment address |
+| `AGENT_PRIVATE_KEY` | No | ❌ No | Agent wallet (automated purchases) |
+| `USE_SMART_ACCOUNT` | No | ❌ No | Enable smart account mode |
+| `SMART_ACCOUNT_ADDRESS` | If smart account | ❌ No | Smart account address |
+| `MCP_SERVER_URL` | No | ❌ No | MCP server connection |
+| `GEMINI_API_KEY` | No | ❌ No | AI Barista feature |
+| `PORT` | No | ❌ No | MCP server port |
 
 ## Architecture
 
@@ -468,6 +605,104 @@ Submits a signed payment for verification and settlement.
 2. Settles payment with facilitator `/settle` endpoint
 3. Returns settlement transaction hash
 
+#### `/api/barista` (POST)
+
+AI barista chat endpoint with optional x402 payment support via MCP.
+
+**Request:**
+```json
+{
+  "message": "What drinks do you have?",
+  "history": [
+    { "role": "user", "content": "Hello" },
+    { "role": "assistant", "content": "Hi! How can I help?" }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "response": "We have Matcha Green Tea, Classic Espresso, Boba Milk Tea...",
+  "paidWithX402": true,
+  "orderItem": "Matcha Green Tea"  // If customer ordered something
+}
+```
+
+**Features:**
+- Uses MCP server with x402 payments if `MCP_SERVER_URL` and `AGENT_PRIVATE_KEY` are configured
+- Falls back to direct Gemini API if MCP not available
+- Falls back to rule-based responses if Gemini not configured
+- Detects order confirmations and extracts item names
+
+**Required Environment Variables:**
+- `GEMINI_API_KEY` (optional, for AI responses)
+- `MCP_SERVER_URL` (optional, for x402-enabled MCP)
+- `AGENT_PRIVATE_KEY` (optional, for MCP client)
+
+#### `/api/barista/purchase` (POST)
+
+Automated agent purchase endpoint using x402 payments.
+
+**Request:**
+```json
+{
+  "itemName": "Matcha Green Tea",
+  "paymentRequirements": {
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "scheme": "exact",
+    "network": "base",
+    "payTo": "0x...",
+    "maxAmountRequired": "350000",
+    // ... other requirements
+  }
+}
+```
+
+**Response (EOA Mode):**
+```json
+{
+  "success": true,
+  "itemName": "Matcha Green Tea",
+  "agentAddress": "0x...",
+  "settlementTxHash": "0x...",
+  "message": "Successfully purchased Matcha Green Tea!"
+}
+```
+
+**Response (Smart Account Mode):**
+```json
+{
+  "success": true,
+  "itemName": "Matcha Green Tea",
+  "agentAddress": "0x...",
+  "message": "Successfully purchased Matcha Green Tea via Ampersend!"
+}
+```
+
+**Modes:**
+- **EOA Mode**: Direct wallet signing, requires `AGENT_PRIVATE_KEY`
+- **Smart Account Mode**: Uses Ampersend with spend limits, requires `USE_SMART_ACCOUNT=true` and `SMART_ACCOUNT_ADDRESS`
+
+**Required Environment Variables:**
+- `AGENT_PRIVATE_KEY` (required)
+- `USE_SMART_ACCOUNT` (optional, for smart account mode)
+- `SMART_ACCOUNT_ADDRESS` (required if `USE_SMART_ACCOUNT=true`)
+- `CDP_API_KEY_ID` and `CDP_API_KEY_SECRET` (for CDP facilitator)
+
+#### `/api/config` (GET)
+
+Returns configuration values accessible to the client.
+
+**Response:**
+```json
+{
+  "defaultPayToAddress": "0x..."
+}
+```
+
+**Usage**: Exposes `AGENT_PAY_TO_ADDRESS` or `NEXT_PUBLIC_AGENT_PAY_TO_ADDRESS` to client-side components.
+
 ### Error Handling
 
 The app includes comprehensive error handling:
@@ -538,6 +773,71 @@ export const templateItems = [
 ```
 
 Click "Add Template Items" to quickly populate your store.
+
+### Optional Features
+
+#### AI Barista Chat
+
+The app includes an AI-powered barista chat feature that demonstrates x402 micropayments for AI services. To enable:
+
+1. **Set up environment variables:**
+   ```bash
+   GEMINI_API_KEY=your_gemini_api_key
+   AGENT_PAY_TO_ADDRESS=0x...  # Address to receive payments
+   ```
+
+2. **Start the MCP server** (optional, for x402-enabled MCP integration):
+   ```bash
+   npx tsx mcp-server.ts
+   ```
+
+3. **Configure MCP server URL** (if using MCP):
+   ```bash
+   MCP_SERVER_URL=http://localhost:8080/mcp
+   AGENT_PRIVATE_KEY=0x...  # Agent wallet for automated purchases
+   ```
+
+The barista chat requires x402 micropayments for each AI response, demonstrating how x402 can be used for pay-per-use AI services.
+
+#### Automated Agent Purchases
+
+The app supports automated purchases via the `/api/barista/purchase` endpoint. This allows an agent to automatically purchase items using x402 payments.
+
+**EOA Mode (Default):**
+```bash
+AGENT_PRIVATE_KEY=0x...  # EOA wallet private key
+USE_SMART_ACCOUNT=false
+```
+
+**Smart Account Mode (Recommended):**
+```bash
+AGENT_PRIVATE_KEY=0x...  # Session key private key
+USE_SMART_ACCOUNT=true
+SMART_ACCOUNT_ADDRESS=0x...  # Smart account address from Ampersend
+```
+
+Smart account mode provides:
+- Spend limits and monitoring via Ampersend
+- Better security with session keys
+- Automatic payment authorization
+
+#### MCP Server Integration
+
+The app can connect to an x402-enabled MCP server for tool-based interactions. The standalone MCP server (`mcp-server.ts`) provides a barista chat tool that requires x402 payments.
+
+**Running the MCP Server:**
+```bash
+# Set required environment variables
+export AGENT_PAY_TO_ADDRESS=0x...
+export GEMINI_API_KEY=your_key  # Optional, for AI responses
+export FACILITATOR_URL=https://x402.org/facilitator
+export PORT=8080  # Optional, defaults to 8080
+
+# Run the server
+npx tsx mcp-server.ts
+```
+
+The server will start on `http://localhost:8080/mcp` and provide x402-enabled tools.
 
 ## Payment Configuration
 
@@ -655,6 +955,38 @@ The purchase modal tracks the complete payment flow:
 - Check browser console for errors
 - Try a different wallet provider
 - Restart dev server after changing env vars
+
+### Environment Variable Issues
+
+**Error**: Environment variable not working
+
+**Common Issues:**
+1. **Client-side variables not accessible:**
+   - Variables must have `NEXT_PUBLIC_` prefix to be available in browser
+   - Restart dev server after adding new variables
+   - Check that variable name matches exactly (case-sensitive)
+
+2. **CDP facilitator authentication fails:**
+   - Verify `CDP_API_KEY_ID` and `CDP_API_KEY_SECRET` are set
+   - Check that `NEXT_PUBLIC_FACILITATOR_URL` points to CDP facilitator
+   - Ensure API keys are valid and not expired
+
+3. **Agent purchase fails:**
+   - Verify `AGENT_PRIVATE_KEY` is set and starts with `0x`
+   - Check wallet has sufficient balance
+   - For smart account mode, verify `SMART_ACCOUNT_ADDRESS` is correct
+   - Ensure `USE_SMART_ACCOUNT` is set to `"true"` (string, not boolean)
+
+4. **MCP server connection fails:**
+   - Verify `MCP_SERVER_URL` is correct and server is running
+   - Check that `AGENT_PRIVATE_KEY` is set for MCP client
+   - Ensure facilitator URL is accessible from server
+
+**Debug Steps:**
+- Check server logs for environment variable values (be careful not to log secrets!)
+- Use `console.log(process.env.VARIABLE_NAME)` in server-side code
+- Verify `.env` file is in correct location (same directory as `next.config.js`)
+- Restart dev server after any `.env` changes
 
 ### Network Mismatch
 
