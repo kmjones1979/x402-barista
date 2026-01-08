@@ -1,6 +1,6 @@
 # x402 Vendor App
 
-A production-ready example application for selling items over x402. This app demonstrates a complete x402 payment integration using wagmi, viem, WalletConnect, and the CDP facilitator for Base mainnet.
+A production-ready example application for selling items over x402. This app demonstrates a complete x402 payment integration using wagmi, viem, WalletConnect, and the CDP facilitator for Base mainnet. It also includes an AI-powered barista chat feature that showcases x402 micropayments for AI services, along with automated agent purchase capabilities.
 
 ## Features
 
@@ -23,14 +23,32 @@ A production-ready example application for selling items over x402. This app dem
 - CDP API Keys for Base mainnet (get from [portal.cdp.coinbase.com](https://portal.cdp.coinbase.com)) - Required for CDP facilitator
 - (Optional) Google Gemini API key for AI Barista feature (get from [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey))
 
-## SDK
+## SDK & Tech Stack
 
-Key packages used:
+### Core Packages
 - `x402` - x402 protocol SDK
 - `@coinbase/x402` - CDP facilitator helper
 - `wagmi` - React Hooks for Ethereum
 - `viem` - TypeScript interface for Ethereum
 - `@web3modal/wagmi` - WalletConnect integration
+
+### UI & Styling
+- `shadcn/ui` - Accessible component library (Radix UI primitives)
+- `tailwindcss` - Utility-first CSS framework
+- `lucide-react` - Icon library
+- `tailwind-merge` - Merge Tailwind classes
+
+### Optional Features
+- `@google/genai` - Google Gemini AI for barista chat
+- `@ampersend_ai/ampersend-sdk` - Ampersend SDK for smart accounts and MCP
+- `fastmcp` - Fast MCP server framework
+- `zod` - Schema validation
+
+### Development Tools
+- `next` - React framework
+- `typescript` - Type safety
+- `eslint` - Code linting
+- `postcss` - CSS processing
 
 ## Setup
 
@@ -87,6 +105,16 @@ pnpm dev
 ```
 
 The app will run on `http://localhost:3010` (configured in `package.json`).
+
+**Optional: Start the MCP server** (for x402-enabled MCP features):
+
+```bash
+npm run mcp-server
+# or
+npx tsx mcp-server.ts
+```
+
+The MCP server will run on `http://localhost:8080/mcp` by default (or the port specified in `PORT` environment variable).
 
 ## Environment Variables
 
@@ -230,7 +258,7 @@ These variables are used for automated agent purchases via the `/api/barista/pur
 x402-vendor-app/
 ├── app/
 │   ├── layout.tsx              # Root layout with providers
-│   ├── page.tsx                # Main page component
+│   ├── page.tsx                # Main page component with tabs
 │   ├── providers.tsx           # Wagmi/React Query providers
 │   ├── globals.css             # Global styles
 │   └── api/
@@ -238,19 +266,37 @@ x402-vendor-app/
 │       │   └── route.ts        # API route for config (exposes AGENT_PAY_TO_ADDRESS)
 │       ├── payment-intent/
 │       │   └── route.ts        # Creates payment intents
-│       └── payment/
-│           └── route.ts        # Submits and settles payments
+│       ├── payment/
+│       │   └── route.ts        # Submits and settles payments
+│       └── barista/
+│           ├── route.ts        # AI barista chat endpoint
+│           └── purchase/
+│               └── route.ts    # Automated agent purchase endpoint
 ├── components/
 │   ├── CreateItemForm.tsx      # Form for creating items
 │   ├── ItemList.tsx            # List of items for sale
 │   ├── ItemCard.tsx            # Individual item card
 │   ├── ItemDetailsModal.tsx    # Detailed item information
 │   ├── PurchaseModal.tsx       # Purchase flow modal
-│   └── TemplateItems.tsx       # Template items for quick setup
+│   ├── TemplateItems.tsx       # Template items for quick setup
+│   ├── VirtualBarista.tsx      # AI barista chat interface
+│   └── ui/                     # shadcn/ui components
+│       ├── badge.tsx
+│       ├── button.tsx
+│       ├── card.tsx
+│       ├── dialog.tsx
+│       ├── input.tsx
+│       ├── label.tsx
+│       ├── scroll-area.tsx
+│       ├── separator.tsx
+│       ├── tabs.tsx
+│       └── textarea.tsx
 ├── config/
 │   └── wagmi.ts                # Wagmi configuration
+├── lib/
+│   └── utils.ts                 # Utility functions (cn helper)
 ├── types/
-│   └── item.ts                 # TypeScript types
+│   └── item.ts                  # TypeScript types
 ├── utils/
 │   ├── payment.ts              # Payment utilities
 │   ├── itemStorage.ts          # LocalStorage management
@@ -258,12 +304,49 @@ x402-vendor-app/
 │   ├── constants.ts             # Network/asset constants
 │   ├── config.ts                # Config utilities
 │   └── templateItems.ts        # Template item definitions
+├── webpack-polyfills/
+│   └── empty.js                 # Webpack polyfill shim
+├── components.json              # shadcn/ui configuration
+├── tailwind.config.ts           # Tailwind CSS configuration
+├── postcss.config.mjs           # PostCSS configuration
+├── mcp-server.ts                # Standalone MCP server with x402 payments
 ├── package.json
 ├── next.config.js              # Next.js configuration
 └── tsconfig.json               # TypeScript configuration
 ```
 
 ### Core Components
+
+#### Main Application Structure
+
+The app uses a tabbed interface with three main sections:
+
+1. **Browse Items Tab**: View and purchase items
+2. **Create Item Tab**: Create new items for sale
+3. **Barista Tab**: AI-powered barista chat with x402 micropayments
+
+#### UI Components
+
+The app uses [shadcn/ui](https://ui.shadcn.com/) components for a modern, accessible UI:
+- **Tabs**: Main navigation between sections
+- **Card**: Item cards and containers
+- **Dialog**: Modals for item details and purchases
+- **Button**: Action buttons throughout the app
+- **Input/Textarea**: Form inputs
+- **Badge**: Status indicators
+- **ScrollArea**: Scrollable content areas
+
+All UI components are located in `components/ui/` and can be customized via Tailwind CSS.
+
+#### VirtualBarista Component
+
+The `VirtualBarista` component (`components/VirtualBarista.tsx`) provides:
+- Real-time chat interface with the AI barista
+- x402 micropayment integration (if MCP server configured)
+- Automatic order processing when customers confirm purchases
+- Payment status tracking and transaction hash display
+- Fallback to direct Gemini API if MCP not available
+- Rule-based responses if Gemini not configured
 
 #### Payment Flow Architecture
 
@@ -753,6 +836,14 @@ try {
 4. Click "Confirm Purchase"
 5. Approve EIP-712 signature in wallet
 6. Wait for settlement (transaction hash displayed)
+
+### Using the AI Barista
+
+1. Navigate to the "Barista" tab
+2. Start chatting with the AI barista about drinks
+3. If MCP server is configured with x402, each response requires a micropayment
+4. The barista can help you choose drinks and answer questions
+5. When you confirm an order, it will be processed automatically
 
 ### Template Items
 
