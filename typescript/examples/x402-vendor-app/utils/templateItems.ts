@@ -7,99 +7,118 @@ const defaultPayTo = getDefaultPayToAddress()
 
 export const templateItems: Omit<VendorItem, "id" | "createdAt">[] = [
   {
-    name: "Digital Art NFT - Abstract #1",
-    description: "A beautiful abstract digital art piece perfect for collectors. High resolution, unique design.",
+    name: "Matcha Green Tea",
+    description: "Premium ceremonial grade matcha powder. Rich in antioxidants, smooth and creamy texture. Perfect for traditional tea ceremony or modern lattes.",
     price: "50000", // $0.05 USDC (6 decimals: 50000 = 0.05)
     paymentRequirements: createPaymentRequirements(
       {
-        name: "Digital Art NFT - Abstract #1",
-        description: "A beautiful abstract digital art piece perfect for collectors. High resolution, unique design.",
+        name: "Matcha Green Tea",
+        description: "Premium ceremonial grade matcha powder. Rich in antioxidants, smooth and creamy texture. Perfect for traditional tea ceremony or modern lattes.",
         price: "50000",
         network: "base", // Using Base mainnet with x402 v2
         asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // Base mainnet USDC
         assetName: "USDC",
         payTo: defaultPayTo || "0x0000000000000000000000000000000000000000", // Will use defaultPayTo or be replaced with user's address
-        imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400",
+        imageUrl: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&q=80",
       },
-      `${baseUrl}/api/item/digital-art-1`
+      `${baseUrl}/api/item/matcha-green-tea`
     ),
-    imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400",
+    imageUrl: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&q=80",
   },
   {
-    name: "Premium API Access - 1 Month",
-    description: "Full access to our premium API endpoints for one month. Includes 10,000 requests and priority support.",
+    name: "Classic Espresso",
+    description: "Bold and rich Italian-style espresso. Made from premium Arabica beans, roasted to perfection. Intense flavor with a smooth crema finish.",
     price: "1000000", // $1.00 USDC
     paymentRequirements: createPaymentRequirements(
       {
-        name: "Premium API Access - 1 Month",
-        description: "Full access to our premium API endpoints for one month. Includes 10,000 requests and priority support.",
+        name: "Classic Espresso",
+        description: "Bold and rich Italian-style espresso. Made from premium Arabica beans, roasted to perfection. Intense flavor with a smooth crema finish.",
         price: "1000000",
         network: "base", // Using Base mainnet with x402 v2
         asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // Base mainnet USDC
         assetName: "USDC",
         payTo: "0x0000000000000000000000000000000000000000",
-        imageUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400",
+        imageUrl: "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=800&q=80",
       },
-      `${baseUrl}/api/item/api-access-1month`
+      `${baseUrl}/api/item/classic-espresso`
     ),
-    imageUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400",
+    imageUrl: "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=800&q=80",
   },
   {
-    name: "E-Book: Web3 Development Guide",
-    description: "Comprehensive guide to Web3 development covering smart contracts, DeFi, and blockchain integration. PDF format, 300+ pages.",
+    name: "Boba Milk Tea",
+    description: "Creamy and sweet bubble tea with chewy tapioca pearls. Available in various flavors like taro, matcha, and classic milk tea. Refreshing and fun!",
     price: "250000", // $0.25 USDC
     paymentRequirements: createPaymentRequirements(
       {
-        name: "E-Book: Web3 Development Guide",
-        description: "Comprehensive guide to Web3 development covering smart contracts, DeFi, and blockchain integration. PDF format, 300+ pages.",
+        name: "Boba Milk Tea",
+        description: "Creamy and sweet bubble tea with chewy tapioca pearls. Available in various flavors like taro, matcha, and classic milk tea. Refreshing and fun!",
         price: "250000",
         network: "base", // Using Base mainnet with x402 v2
         asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // Base mainnet USDC
         assetName: "USDC",
         payTo: "0x0000000000000000000000000000000000000000",
-        imageUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400",
+        imageUrl: "https://images.unsplash.com/photo-1525385133512-2f3bdd039054?w=800&q=80",
       },
-      `${baseUrl}/api/item/ebook-web3-guide`
+      `${baseUrl}/api/item/boba-milk-tea`
     ),
-    imageUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400",
+    imageUrl: "https://images.unsplash.com/photo-1525385133512-2f3bdd039054?w=800&q=80",
   },
   {
-    name: "Custom Logo Design",
-    description: "Professional logo design service. Includes 3 initial concepts, 2 rounds of revisions, and final files in multiple formats.",
+    name: "Iced Cold Brew Coffee",
+    description: "Smooth and refreshing cold brew coffee. Steeped for 24 hours for maximum flavor extraction. Low acidity, naturally sweet, perfect for hot days.",
     price: "100000", // $0.10 USDC
     paymentRequirements: createPaymentRequirements(
       {
-        name: "Custom Logo Design",
-        description: "Professional logo design service. Includes 3 initial concepts, 2 rounds of revisions, and final files in multiple formats.",
+        name: "Iced Cold Brew Coffee",
+        description: "Smooth and refreshing cold brew coffee. Steeped for 24 hours for maximum flavor extraction. Low acidity, naturally sweet, perfect for hot days.",
         price: "100000",
         network: "base", // Using Base mainnet with x402 v2
         asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // Base mainnet USDC
         assetName: "USDC",
         payTo: "0x0000000000000000000000000000000000000000",
-        imageUrl: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400",
+        imageUrl: "https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=800&q=80",
       },
-      `${baseUrl}/api/item/logo-design`
+      `${baseUrl}/api/item/iced-cold-brew`
     ),
-    imageUrl: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400",
+    imageUrl: "https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=800&q=80",
   },
   {
-    name: "Premium Course: Solidity Mastery",
-    description: "Complete Solidity programming course with 50+ hours of video content, coding exercises, and certificate of completion.",
+    name: "Earl Grey Tea",
+    description: "Elegant black tea infused with bergamot oil. Fragrant, citrusy, and sophisticated. Perfect for afternoon tea or a morning pick-me-up.",
     price: "750000", // $0.75 USDC
     paymentRequirements: createPaymentRequirements(
       {
-        name: "Premium Course: Solidity Mastery",
-        description: "Complete Solidity programming course with 50+ hours of video content, coding exercises, and certificate of completion.",
+        name: "Earl Grey Tea",
+        description: "Elegant black tea infused with bergamot oil. Fragrant, citrusy, and sophisticated. Perfect for afternoon tea or a morning pick-me-up.",
         price: "750000",
         network: "base", // Using Base mainnet with x402 v2
         asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // Base mainnet USDC
         assetName: "USDC",
         payTo: "0x0000000000000000000000000000000000000000",
-        imageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400",
+        imageUrl: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800&q=80",
       },
-      `${baseUrl}/api/item/solidity-course`
+      `${baseUrl}/api/item/earl-grey-tea`
     ),
-    imageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400",
+    imageUrl: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800&q=80",
+  },
+  {
+    name: "Cappuccino",
+    description: "Classic Italian cappuccino with perfectly steamed milk foam. Rich espresso balanced with creamy texture. Artfully crafted with latte art.",
+    price: "600000", // $0.60 USDC
+    paymentRequirements: createPaymentRequirements(
+      {
+        name: "Cappuccino",
+        description: "Classic Italian cappuccino with perfectly steamed milk foam. Rich espresso balanced with creamy texture. Artfully crafted with latte art.",
+        price: "600000",
+        network: "base", // Using Base mainnet with x402 v2
+        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // Base mainnet USDC
+        assetName: "USDC",
+        payTo: "0x0000000000000000000000000000000000000000",
+        imageUrl: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=800&q=80",
+      },
+      `${baseUrl}/api/item/cappuccino`
+    ),
+    imageUrl: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=800&q=80",
   },
 ]
 
