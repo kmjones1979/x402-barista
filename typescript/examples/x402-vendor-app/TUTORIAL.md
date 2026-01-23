@@ -10,12 +10,170 @@ This tutorial provides a comprehensive walkthrough of the x402 Vendor App, cover
 
 ## Table of Contents
 
-1. [Introduction to x402](#introduction-to-x402)
-2. [Basic x402 Payment Flow](#basic-x402-payment-flow)
-3. [Ampersend SDK Integration](#ampersend-sdk-integration)
-4. [LLM Integration with x402 Payments](#llm-integration-with-x402-payments)
-5. [Complete Configuration Guide](#complete-configuration-guide)
-6. [Putting It All Together](#putting-it-all-together)
+1. [What is x402? (5-Minute Introduction)](#what-is-x402-5-minute-introduction)
+2. [Introduction to x402](#introduction-to-x402)
+3. [Basic x402 Payment Flow](#basic-x402-payment-flow)
+4. [Ampersend SDK Integration](#ampersend-sdk-integration)
+5. [LLM Integration with x402 Payments](#llm-integration-with-x402-payments)
+6. [Complete Configuration Guide](#complete-configuration-guide)
+7. [Putting It All Together](#putting-it-all-together)
+
+---
+
+## What is x402? (5-Minute Introduction)
+
+**Reading time: ~5 minutes**
+
+### The Problem x402 Solves
+
+Traditional payment systems have significant limitations when it comes to micropayments and pay-per-use services:
+
+- **High transaction fees**: Credit card processing fees (2-3%) make small payments uneconomical
+- **Slow settlement**: Bank transfers can take days to settle
+- **Geographic restrictions**: Payment processors often limit which countries can send/receive payments
+- **Complex integration**: Each payment provider has different APIs and requirements
+- **Privacy concerns**: Traditional payments require sharing sensitive financial information
+
+For services like AI chat, API calls, or content access, these limitations make it impractical to charge per-use. You're forced to use subscription models or bundle services, even when users only want to pay for what they actually use.
+
+### What is x402?
+
+**x402 is a protocol that enables instant, low-cost micropayments on blockchain networks using token transfers and cryptographic signatures.**
+
+Think of it as "Stripe for blockchain" - but instead of credit cards, it uses cryptocurrency tokens (like USDC) and instead of waiting for bank settlements, payments are verified and settled on-chain in seconds.
+
+### How x402 Works (High-Level)
+
+1. **Service defines payment requirements**: "This AI response costs $0.001 USDC"
+2. **User signs a payment authorization**: Using their crypto wallet, they sign an EIP-712 structured message authorizing the payment
+3. **Facilitator verifies and settles**: A facilitator service verifies the signature and executes the on-chain token transfer
+4. **Payment completes**: The service receives payment, user gets the service
+
+The entire process happens in seconds, with fees typically under $0.01, making micropayments economically viable.
+
+### Key Benefits of x402
+
+#### 1. **True Micropayments**
+- Pay $0.001 for an AI response, $0.01 for an API call, or any small amount
+- Transaction fees are minimal (often under $0.01 on Layer 2 networks like Base)
+- No minimum payment thresholds
+
+#### 2. **Instant Settlement**
+- Payments settle on-chain in seconds (not days)
+- No chargebacks or payment reversals
+- Funds are immediately available
+
+#### 3. **Global Access**
+- Works anywhere with internet access
+- No geographic restrictions
+- No bank account required (just a crypto wallet)
+
+#### 4. **Privacy-Preserving**
+- No need to share credit card numbers or bank details
+- Wallet addresses are pseudonymous
+- Only the payment amount and recipient are visible on-chain
+
+#### 5. **Programmable Payments**
+- Payments can be automated via smart contracts
+- Conditional payments (pay only if service is delivered)
+- Subscription-like recurring payments without subscriptions
+
+#### 6. **Developer-Friendly**
+- Simple API for creating payment requirements
+- Standard EIP-712 signing (works with any wallet)
+- Facilitator services handle complexity
+
+### Real-World Use Cases
+
+x402 enables new business models that weren't possible before:
+
+- **Pay-per-query AI services**: Charge $0.001 per AI response instead of requiring subscriptions
+- **API monetization**: Charge per API call instead of tiered pricing
+- **Content access**: Pay $0.10 to read an article instead of paywalls
+- **Gaming**: Microtransactions for in-game items or features
+- **IoT services**: Pay per sensor reading or device interaction
+- **Streaming**: Pay per minute of content instead of monthly subscriptions
+
+### x402 vs Traditional Payments
+
+| Feature | Traditional Payments | x402 |
+|---------|---------------------|------|
+| **Minimum payment** | $0.50 - $1.00 | $0.001 or less |
+| **Transaction fee** | 2-3% + $0.30 | ~$0.01 (on L2) |
+| **Settlement time** | 1-3 days | Seconds |
+| **Geographic limits** | Many restrictions | Global |
+| **Chargebacks** | Possible | Not possible |
+| **Integration** | Complex (multiple providers) | Simple (one protocol) |
+| **Privacy** | Requires sensitive data | Pseudonymous |
+
+### The x402 Architecture
+
+x402 uses a three-party model:
+
+1. **Payer**: The user who wants to pay for a service
+2. **Payee**: The service provider who receives payment
+3. **Facilitator**: A service that verifies signatures and settles payments on-chain
+
+```
+┌─────────┐      ┌──────────┐      ┌────────────┐
+│  Payer  │─────▶│ Facilitator │─────▶│   Payee   │
+│ (User)  │◀─────│  (Service) │◀─────│ (Service)  │
+└─────────┘      └──────────┘      └────────────┘
+   Wallet          Verifies &          Receives
+   Signs           Settles            Payment
+```
+
+The facilitator is crucial because it:
+- Verifies EIP-712 signatures are valid
+- Checks payment authorizations haven't expired
+- Executes on-chain token transfers
+- Handles edge cases and error recovery
+
+### Why EIP-712 Signing?
+
+x402 uses **EIP-712** (Ethereum Improvement Proposal 712) for signing payments. This is important because:
+
+- **Human-readable**: Users see exactly what they're signing (amount, recipient, expiration)
+- **Secure**: Cryptographically verifiable signatures
+- **Standard**: Works with any EIP-712 compatible wallet (MetaMask, Coinbase Wallet, etc.)
+- **Structured**: Can include metadata (description, resource URL, etc.)
+
+When you sign an x402 payment, your wallet shows you a clear message like:
+```
+Sign to authorize payment:
+Amount: 0.001 USDC
+To: 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
+Expires: In 5 minutes
+Description: AI chat response
+```
+
+### x402 Versions
+
+x402 has two versions:
+
+- **x402 v1**: Uses friendly network names (e.g., "base" for Base mainnet)
+- **x402 v2**: Uses CAIP-2 format (e.g., "eip155:8453" for Base mainnet)
+
+This tutorial focuses on **x402 v1**, which is simpler and more readable.
+
+### Getting Started with x402
+
+To use x402, you need:
+
+1. **A crypto wallet**: MetaMask, Coinbase Wallet, or any EIP-712 compatible wallet
+2. **Some tokens**: USDC on Base (or other supported networks) for payments
+3. **A facilitator**: Use a public facilitator (like CDP) or run your own
+4. **x402 SDK**: JavaScript/TypeScript SDK for creating and signing payments
+
+### What's Next?
+
+Now that you understand what x402 is and why it exists, let's dive into the technical details of how to implement it in your application. The rest of this tutorial will show you:
+
+- How to create payment requirements
+- How to sign payments with wallets
+- How to verify and settle payments
+- How to integrate with Ampersend for advanced features
+- How to build LLM services with x402 micropayments
 
 ---
 
